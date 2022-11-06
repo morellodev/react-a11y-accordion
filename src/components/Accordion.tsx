@@ -70,7 +70,7 @@ export const AccordionItem: Component<{ name: string }> = ({
 
 export const AccordionTrigger: Component = ({ children }) => {
   const { onExpandedItemChange } = useAccordionContext();
-  const { isExpanded, name } = useAccordionItemContext();
+  const { name } = useAccordionItemContext();
 
   return <h3 onClick={() => onExpandedItemChange(name)}>{children}</h3>;
 };
