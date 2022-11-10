@@ -5,7 +5,7 @@
  * accessibility requirements.
  */
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useId, useState } from "react";
 
 type Component<P = {}> = React.FC<P & { children?: React.ReactNode }>;
 
@@ -42,6 +42,8 @@ export const AccordionRoot: Component<{
 interface AccordionItemContextValue {
   name: string;
   isExpanded: boolean;
+  triggerId: string;
+  contentId: string;
 }
 
 const AccordionItemContext = createContext<AccordionItemContextValue | null>(
@@ -59,10 +61,16 @@ export const AccordionItem: Component<{ name: string }> = ({
   children,
 }) => {
   const { expandedItem } = useAccordionContext();
+  const itemId = useId();
+
   const isExpanded = expandedItem === name;
+  const triggerId = `accordion-trigger-${itemId}`;
+  const contentId = `accordion-content-${itemId}`;
 
   return (
-    <AccordionItemContext.Provider value={{ name, isExpanded }}>
+    <AccordionItemContext.Provider
+      value={{ name, isExpanded, triggerId, contentId }}
+    >
       <div>{children}</div>
     </AccordionItemContext.Provider>
   );
@@ -70,12 +78,29 @@ export const AccordionItem: Component<{ name: string }> = ({
 
 export const AccordionTrigger: Component = ({ children }) => {
   const { onExpandedItemChange } = useAccordionContext();
-  const { name } = useAccordionItemContext();
+  const { name, isExpanded, triggerId, contentId } = useAccordionItemContext();
 
-  return <h3 onClick={() => onExpandedItemChange(name)}>{children}</h3>;
+  return (
+    <h3>
+      <button
+        id={triggerId}
+        type="button"
+        aria-controls={contentId}
+        aria-disabled={isExpanded}
+        aria-expanded={isExpanded}
+        onClick={() => onExpandedItemChange(name)}
+      >
+        {children}
+      </button>
+    </h3>
+  );
 };
 
 export const AccordionContent: Component = ({ children }) => {
-  const { isExpanded } = useAccordionItemContext();
-  return <div>{isExpanded ? children : null}</div>;
+  const { isExpanded, triggerId, contentId } = useAccordionItemContext();
+  return (
+    <div id={contentId} role="region" aria-labelledby={triggerId}>
+      {isExpanded ? children : null}
+    </div>
+  );
 };
